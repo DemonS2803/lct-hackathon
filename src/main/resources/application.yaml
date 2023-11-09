@@ -1,0 +1,32 @@
+
+server:
+  port: 8088
+
+spring:
+  jpa:
+    hibernate:
+      dll-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+  # database-platform: org,hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lctdb
+    username: postgres
+    password: lctPassword
+    driver-class-name: org.postgresql.Driver
+
+jwt:
+  header:
+    Authorization
+  secret:
+    lct-hackaton
+  time:
+    expired:
+      5000
+    accept:
+      300
+  issuer:
+    app
