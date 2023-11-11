@@ -86,8 +86,7 @@ public class User {
     }
 
     public void moveTo(Task task) {
-        this.localeX = task.getLocaleX();
-        this.localeY = task.getLocaleY();
+        this.address = task.getAddress();
     }
 
     public void endWorkingDay() {

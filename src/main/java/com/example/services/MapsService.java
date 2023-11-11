@@ -30,6 +30,7 @@ public class MapsService {
         waysCache = new HashMap<>();
         ArrayList<FromToDTO> dbCache = (ArrayList<FromToDTO>) cacheRepository.findAll();
         for (var fromTo: dbCache) {
+            if (fromTo.getFromPoint() == null || fromTo.getToPoint() == null || "".equals(fromTo.getFromPoint()) || "".equals(fromTo.getToPoint())) continue;
             waysCache.put(new Way(fromTo.getFromPoint(), fromTo.getToPoint()), fromTo.getMinutes() / 60);
         }
 
@@ -45,6 +46,7 @@ public class MapsService {
                     tasks.get(i).getAddress().equals(tasks.get(j).getAddress())) {
                     continue;
                 }
+
                 waysRequestSet.add(new FromToDTO(tasks.get(i).getAddress(), tasks.get(j).getAddress()));
             }
         }
@@ -71,7 +73,8 @@ public class MapsService {
     public void fillCache(ArrayList<FromToDTO> gotWays) {
         for (var gotWay: gotWays) {
             if (waysCache.containsKey(new Way(gotWay.getFromPoint(), gotWay.getToPoint())) || 
-                waysCache.containsKey(new Way(gotWay.getToPoint(), gotWay.getFromPoint()))) {
+                waysCache.containsKey(new Way(gotWay.getToPoint(), gotWay.getFromPoint())) || 
+                gotWay.getFromPoint() == null || gotWay.getToPoint() == null) {
                 continue;
             }
             waysCache.put(new Way(gotWay.getFromPoint(), gotWay.getToPoint()), gotWay.getMinutes() / 60d);
@@ -82,6 +85,9 @@ public class MapsService {
     }
 
     public Double getRoadTime(String from, String to) {
+        if (from == null || to == null) {
+            return Double.MAX_VALUE;
+        }
         if (from.equals(to)) {
             return 0d;
         }

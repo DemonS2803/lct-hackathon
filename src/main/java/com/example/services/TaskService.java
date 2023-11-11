@@ -71,19 +71,18 @@ public class TaskService {
             User closestUser = null;
             double optimalWorkerTime = Double.MAX_VALUE;
             for (User user : users) {
-                double roadTime = mapsService.getRoadTime(user.getAddress(), task.getAddress()) + task.getHoursDuration();
-                if (roadTime < optimalWorkerTime && 
+                double withRoadTime = mapsService.getRoadTime(user.getAddress(), task.getAddress()) + task.getHoursDuration();
+                if (withRoadTime < optimalWorkerTime && 
                         user.getGrade().ordinal() >= task.getPriority().ordinal() &&
-                        user.getLeftWorkingHours() >= roadTime) {
+                        user.getLeftWorkingHours() >= withRoadTime) {
                     closestUser = user;
-                    optimalWorkerTime = roadTime + task.getHoursDuration();
+                    optimalWorkerTime = withRoadTime;
                 }
             }
             if (closestUser != null) {
                 closestUser.addTask(task);
                 closestUser.minusWorkingTime(optimalWorkerTime);
-            } else {
-            }
+            } 
         }
 
 
@@ -100,12 +99,12 @@ public class TaskService {
             User closestUser = null;
             double optimalWorkerTime = Double.MAX_VALUE;
             for (User user : users) {
-                double roadTime = mapsService.getRoadTime(user.getAddress(), task.getAddress()) + task.getHoursDuration();
-                if (roadTime < optimalWorkerTime && 
+                double withRoadTime = mapsService.getRoadTime(user.getAddress(), task.getAddress()) + task.getHoursDuration();
+                if (withRoadTime < optimalWorkerTime && 
                         user.getGrade().ordinal() >= task.getPriority().ordinal() &&
-                        user.getLeftWorkingHours() >= roadTime) {
+                        user.getLeftWorkingHours() >= withRoadTime) {
                     closestUser = user;
-                    optimalWorkerTime = roadTime + task.getHoursDuration();
+                    optimalWorkerTime = withRoadTime;
                 }
             }
             if (closestUser != null) {
@@ -118,7 +117,6 @@ public class TaskService {
         for (User user: users) {
             user.setAddress(usersStartMap.get(user.getLogin()));
             sortUserTasksByRoadTime(user);
-            user.setAddress(usersStartMap.get(user.getLogin()));
         }
 
 
@@ -381,8 +379,9 @@ public class TaskService {
         return users;
     }
 
-    public ArrayList<PartnerPoint> getPartnerPoints() {
-        return (ArrayList<PartnerPoint>) partnerPoints;
+    public List<PartnerPoint> getPartnerPoints() {
+        System.out.println(partnerPoints);
+        return partnerPointsRepository.findAll();
     }
     public ArrayList<Task> getTasks() {
         return tasks;
@@ -438,6 +437,7 @@ public class TaskService {
                     closestTask = task;
                 }
             }
+
             user.minusWorkingTime(closestTask.getHoursDuration() + mapsService.getRoadTime(user.getAddress(), closestTask.getAddress()));
             user.addTask(closestTask);
             tasks.remove(closestTask);

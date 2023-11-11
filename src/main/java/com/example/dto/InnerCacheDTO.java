@@ -1,7 +1,6 @@
 package com.example.dto;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import com.example.entities.FromToDTO;
 
@@ -14,8 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class FillMapsCacheDto {
+public class InnerCacheDTO {
 
     private ArrayList<FromToDTO> data;
-    // private InnerCacheDTOs data;
+    
 }
