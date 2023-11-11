@@ -13,8 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.example.enums.UserRole;
 
@@ -40,8 +38,12 @@ public class SecurityConfiguration {
         httpSecurity
                 .authorizeHttpRequests((authz) -> authz
                         .requestMatchers("/auth/**").permitAll()
+                        // .requestMatchers("/job/**").hasAnyAuthority(UserRole.WORKER.name(), UserRole.MANAGER.name())
+                        // .requestMatchers("/manage/**").hasAnyAuthority(UserRole.WORKER.name(), UserRole.MANAGER.name())
+                        // .requestMatchers("/maps/**").hasAnyAuthority(UserRole.WORKER.name(), UserRole.MANAGER.name())
                         .requestMatchers("/job/**").hasAnyAuthority(UserRole.WORKER.name(), UserRole.MANAGER.name())
-                        .requestMatchers("/manage/**").hasAnyAuthority(UserRole.WORKER.name(), UserRole.MANAGER.name())
+                        .requestMatchers("/manage/**").hasAuthority(UserRole.MANAGER.name())
+                        .requestMatchers("/maps/**").hasAuthority(UserRole.MANAGER.name())
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

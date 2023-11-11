@@ -1,7 +1,5 @@
 package com.example.entities;
 
-import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
@@ -10,28 +8,31 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "partner_points")
+@Table(name = "cached_ways")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PartnerPoint {
+public class FromToDTO {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonProperty("id")
     private Long id;
-    private String address;
-    private int localeX;
-    private int localeY;
-    private boolean isEdited;
-    private LocalDateTime connectionDate;
-    private boolean isCardsAndMaterialsDelivered;
-    private int daysAfterLastCard;
-    private int approvedRequest;
-    private int deliveredCardsNumber;
+    @JsonProperty(value = "from")
+    private String fromPoint;
+    @JsonProperty(value = "to")
+    private String toPoint;
+    private double minutes;
+
+    public FromToDTO(String from, String to) {
+        this.fromPoint = from;
+        this.toPoint = to;
+        this.minutes = 0;
+    }
     
 }

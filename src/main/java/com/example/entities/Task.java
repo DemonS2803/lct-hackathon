@@ -49,8 +49,8 @@ public class Task {
     private User executor;
 
 
-    public Task(Long id, PartnerPoint point) {
-        this.id = id;
+
+    public Task(PartnerPoint point) {
         this.address = point.getAddress();
         this.localeX = point.getLocaleX();
         this.localeY = point.getLocaleY();
@@ -69,15 +69,6 @@ public class Task {
         }
     }
 
-    // public Task getCopy() {
-    //     var copy = new Task();
-    //     copy.setId(id);
-    //     copy.setAddress(address);
-    //     copy.setExecutor(executor);
-    //     copy.setPriority(priority);
-    //     copy.setStatus(status);
-    //     return copy;
-    // }
 
 
     @Override

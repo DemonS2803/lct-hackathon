@@ -21,14 +21,11 @@ public class JwtUtils {
 
     @Autowired
     private Environment environment;
-    @Autowired
-    private UserService userService;
 
     public String generateJwtToken(String login, String role) {
         Algorithm algorithm = Algorithm.HMAC256(environment.getRequiredProperty("jwt.secret"));
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, Integer.parseInt(environment.getRequiredProperty("jwt.time.expired")));
-//        System.out.println("secret: " + environment.getRequiredProperty("jwt.secret") + " expired: " + environment.getRequiredProperty("jwt.time.expired"));
         return JWT.create()
                 .withSubject(login)
                 .withClaim("role", role)
@@ -38,7 +35,6 @@ public class JwtUtils {
     }
 
 
-    // проверяет, не истек ли токен
     public Boolean validateJwtToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(environment.getRequiredProperty("jwt.secret"));
         try {

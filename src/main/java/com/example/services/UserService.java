@@ -38,29 +38,4 @@ public class UserService {
         userRepository.saveAll(users);
     }
 
- 
-    // public User saveNewUser(AuthRegisterDTO inputUser) {
-    //     try {
-    //         var user = UserEntity.builder()
-    //                 .email(inputUser.getEmail())
-    //                 .firstName(inputUser.getFirstName())
-    //                 .secondName(inputUser.getLastName())
-    //                 .login(inputUser.getEmail())
-    //                 .role(UserRole.ADMIN)
-    //                 .password(DigestUtils.sha256Hex(inputUser.getPassword()))
-    //                 .build();
-    //         System.out.println(user);
-    //         userRepository.save(user);
-    //         return user;
-    //     } catch (Exception e) {
-    //         e.printStackTrace();
-    //         return null;
-    //     }
-    // }
-
-    // public void saveUser(UserEntity user) {
-    //     userRepository.save(user);
-    // }
-
-
 }

@@ -52,18 +52,13 @@ public class User {
     private int localeX;
     private int localeY;
     private double leftWorkingHours;
-    // @OneToMany
-    // @JoinTable(name = "planned_tasks_workers",
-    //             joinColumns = {@JoinColumn(name = "task_id")},
-    //             inverseJoinColumns = {@JoinColumn(name = "user_id")})
     @Transient
     private Queue<Task> plannedTasks = new LinkedList<>();
-    // @Transient
-    // private ArrayList<Task> completedTasks = new ArrayList<>();
 
     public User(String login, String name, EmployeeGrade grade, int localeX, int localeY, String address) {
         this.login = login;
         this.name = name;
+        // set standart password "password"
         this.password = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
         this.role = UserRole.WORKER;
         this.grade = grade;
@@ -74,26 +69,16 @@ public class User {
         this.plannedTasks = new LinkedList<>();
     }
 
-    // must be deleted
-    public double getTaskTimeWithRoad(Task task) {
-        double roadTime = Math.sqrt((localeX - task.getLocaleX()) * (localeX - task.getLocaleX())
-                + (localeY - task.getLocaleY()) * (localeY - task.getLocaleY()));
 
-        if (task.getHoursDuration() + roadTime > leftWorkingHours || task.getPriority().ordinal() > this.grade.ordinal())
-            return Double.MAX_VALUE;
-        return task.getHoursDuration() + roadTime;
-    }
-
-    // must be deleted
     public void addTask(Task task) {
-        this.leftWorkingHours -= getTaskTimeWithRoad(task);
         this.plannedTasks.offer(task);
         moveTo(task);
     }
 
-    // public void appendCopiedTask(Task task) {
-    //     this.plannedTasks.offer(task.getCopy());
-    // }
+    public void minusWorkingTime(double time) {
+        this.leftWorkingHours -= time;
+    }
+
 
     public void addTask(Task task, double timeWithRoad) {
         this.leftWorkingHours -= timeWithRoad;
@@ -105,8 +90,12 @@ public class User {
         this.localeY = task.getLocaleY();
     }
 
+    public void endWorkingDay() {
+        this.leftWorkingHours = 9;
+    }
+
     public void executeTask(Task task) {
-        // completedTasks.add(task);
+        address = task.getAddress();
         localeX = task.getLocaleX();
         localeY = task.getLocaleY();
         task.setExecutor(this);
@@ -116,4 +105,5 @@ public class User {
     public String toString() {
         return "Worker{ name=" + name + ", grade=" + grade + "}";
     }
+
 }

@@ -1,5 +1,6 @@
 package com.example.controllers;
 
+import java.util.ArrayList;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -8,10 +9,15 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.entities.FromToDTO;
 import com.example.enums.UserRole;
+import com.example.services.MapsService;
 import com.example.services.TaskService;
 import com.example.services.UserService;
 
@@ -24,6 +30,8 @@ public class ManagerController {
     private UserService userService;
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private MapsService mapsService;
 
 
 
@@ -36,7 +44,6 @@ public class ManagerController {
         } catch (Exception e) {
             // e.printStackTrace();            
             return new ResponseEntity<>(HttpStatusCode.valueOf(400));
-
         }
     }
 
@@ -61,23 +68,42 @@ public class ManagerController {
         return new ResponseEntity<>(taskService.getPartnerPoints(), HttpStatusCode.valueOf(200));
     }
 
+    @PutMapping("/go_next_day")
+    public ResponseEntity<?> goNextDay() {
+        try {
+            taskService.goNextDay();
+            return new ResponseEntity<>(HttpStatusCode.valueOf(200));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatusCode.valueOf(400));
+        }
+    }
+
+    @PutMapping("/doomsday")
+    public ResponseEntity<?> goDoomsday() {
+        taskService.doomsday();
+        return new ResponseEntity<>(HttpStatusCode.valueOf(200));
+    }
+
+    @PutMapping("/doomsday2")
+    public ResponseEntity<?> goDoomsday2() {
+        taskService.doomsday2();
+        return new ResponseEntity<>(HttpStatusCode.valueOf(200));
+    }
+
     @GetMapping("/fill_1")
     public ResponseEntity<?> fillData1Case() {
         taskService.fill1Case();
         return new ResponseEntity<>(HttpStatusCode.valueOf(200));
     }
 
-     @GetMapping("/fill_2")
-    public ResponseEntity<?> fillData2Case() {
-        taskService.fill2Case();
-        return new ResponseEntity<>(HttpStatusCode.valueOf(200));
-    }
 
      @GetMapping("/fill_all")
     public ResponseEntity<?> fillDataAllCase() {
         taskService.fillAllDatabase();
         return new ResponseEntity<>(HttpStatusCode.valueOf(200));
     }
+
 
     
 }
