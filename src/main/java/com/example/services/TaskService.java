@@ -2,16 +2,22 @@ package com.example.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.dto.EditWorkerDTO;
+import com.example.dto.ManageWorkerDTO;
 import com.example.dto.Way;
 import com.example.entities.FromToDTO;
 import com.example.entities.PartnerPoint;
@@ -44,6 +50,10 @@ public class TaskService {
     private ArrayList<Task> tasks;
     private ArrayList<User> users;
     private List<PartnerPoint> partnerPoints;
+    // 
+    private Set<Task> alreadyPlannedTasks;
+    private User curUser;
+    // 
     private Map<String, String> usersStartMap;
     private Map<String, ArrayList<Task>> tasksCompletedByUsers;
 
@@ -51,21 +61,25 @@ public class TaskService {
     public void initTaskService() {
         log.info("initialized task service");
         partnerPoints = (ArrayList<PartnerPoint>) partnerPointsRepository.findAll();
-        System.out.println(partnerPoints);
+        // System.out.println(partnerPoints);
         System.out.println("PP size " + partnerPoints.size());
     
         users = (ArrayList<User>) userService.findAll().stream().filter(us -> us.getRole() == UserRole.WORKER).collect(Collectors.toList());
         tasksCompletedByUsers = new HashMap<>();
+        // getWorkers();
+        // getNextDayTasks();
     }
 
 
     public ArrayList<User> distributeTasks() {
-
+        Date date = new Date();
         usersStartMap = new HashMap<>();
+        alreadyPlannedTasks = new HashSet<>();
 
         for (var user: users) {
             usersStartMap.put(user.getLogin(), user.getAddress());
         }
+        System.out.println(usersStartMap);
 
         for (var task: tasks) {
             User closestUser = null;
@@ -81,10 +95,10 @@ public class TaskService {
             }
             if (closestUser != null) {
                 closestUser.addTask(task);
+                alreadyPlannedTasks.add(task);
                 closestUser.minusWorkingTime(optimalWorkerTime);
             } 
         }
-
 
         for (User user: users) {
             user.setAddress(usersStartMap.get(user.getLogin()));
@@ -103,21 +117,25 @@ public class TaskService {
                 if (withRoadTime < optimalWorkerTime && 
                         user.getGrade().ordinal() >= task.getPriority().ordinal() &&
                         user.getLeftWorkingHours() >= withRoadTime) {
-                    closestUser = user;
-                    optimalWorkerTime = withRoadTime;
+                            closestUser = user;
+                            optimalWorkerTime = withRoadTime;
                 }
             }
             if (closestUser != null) {
                 closestUser.addTask(task);
+                alreadyPlannedTasks.add(task);
                 closestUser.minusWorkingTime(optimalWorkerTime);
-            } else {
-            }
+            } 
+
         }
 
         for (User user: users) {
             user.setAddress(usersStartMap.get(user.getLogin()));
             sortUserTasksByRoadTime(user);
         }
+
+        System.out.println(alreadyPlannedTasks);
+        System.out.println(tasksCompletedByUsers);
 
 
         for (var user: users) {
@@ -128,21 +146,22 @@ public class TaskService {
             }
             user.setAddress(usersStartMap.get(user.getLogin()));
         }
-        return users;
+        System.out.println("greedy loop time: " + (new Date().getTime() - date.getTime()));
 
+        return users;
     }
 
-    public boolean executeTask(String workerLogin) {
+    public boolean executeTask(String workerLogin, String comment) {
         for (User worker: users) {
             if (worker.getLogin().equals(workerLogin) && !worker.getPlannedTasks().isEmpty()) {
                 Task task = worker.getPlannedTasks().poll();
                 task.setStatus(TaskStatus.COMPLETED);
+                task.setComment(comment);
                 worker.executeTask(task);
                 if (!tasksCompletedByUsers.containsKey(workerLogin)) {
                     tasksCompletedByUsers.put(workerLogin, new ArrayList<>());
                 } 
                 tasksCompletedByUsers.get(workerLogin).add(task);
-                System.out.println(tasksCompletedByUsers);
                 if (!worker.getPlannedTasks().isEmpty()) {
                     var nextTask = worker.getPlannedTasks().peek();
                     nextTask.setStatus(TaskStatus.IN_PROGRESS);
@@ -193,9 +212,11 @@ public class TaskService {
 
     public void endWorkersDay() {
         ArrayList<Task> inProgressTasks = new ArrayList<>();
+        System.out.println("end day");
+        System.out.println(users);
         for (var user: users) {
             user.endWorkingDay();
-            if (usersStartMap != null) user.setAddress(usersStartMap.get(user.getLogin()));
+            // if (usersStartMap != null) user.setAddress(usersStartMap.get(user.getLogin()));
             if (!user.getPlannedTasks().isEmpty()) {
                 var inProgressTask = user.getPlannedTasks().peek();
                 inProgressTask.setStatus(TaskStatus.CREATED);
@@ -214,6 +235,20 @@ public class TaskService {
         getWorkers();
         getNextDayTasks();
         distributeTasks();
+        for (User user: users) {
+            System.out.println(user);
+        }
+    }
+
+    public void goNextDay2() {
+        tasksCompletedByUsers = new HashMap<>();
+        endWorkersDay();
+        getWorkers();
+        getNextDayTasks();
+        distribute2();
+        for (User user: users) {
+            System.out.println(user);
+        }
     }
 
     public void doomsday() {
@@ -365,9 +400,15 @@ public class TaskService {
         for (var task: tasks) {
             task.setWorkersScore(0);
             for (var tmpTask: tasks) {
+                if (task.getAddress() == tmpTask.getAddress()) {
+                    continue;
+                }
                 task.addScore((double) tmpTask.getPriority().ordinal() / mapsService.getRoadTime(tmpTask.getAddress(), task.getAddress()));
             }
             for (User user : users) {
+                if (task.getAddress() == user.getAddress()) {
+                    continue;
+                }
                 if (user.getGrade().ordinal() >= task.getPriority().ordinal()) {
                     task.addScore(-1d / (task.getHoursDuration() + mapsService.getRoadTime(user.getAddress(), task.getAddress())));
                 }
@@ -377,6 +418,17 @@ public class TaskService {
 
     public ArrayList<User> getUsers() {
         return users;
+    }
+
+    public ArrayList<ManageWorkerDTO> getWorkersInfo() {
+        ArrayList<ManageWorkerDTO> workersInfo = new ArrayList<>();
+        for (User user: users) {
+            ManageWorkerDTO info = userService.getWorkerInfo(user.getLogin());
+            info.setUser(user);
+            workersInfo.add(info);
+            
+        }
+        return workersInfo;
     }
 
     public List<PartnerPoint> getPartnerPoints() {
@@ -454,13 +506,94 @@ public class TaskService {
     }
 
     public boolean isTaskPlanned(Task task) {
+        return alreadyPlannedTasks.contains(task);
+        // for (User user: users) {
+        //     for (Task plannedTask: user.getPlannedTasks()) {
+        //         if (task.getId() == plannedTask.getId()) {
+        //             return true;
+        //         }
+        //     }
+        // }
+        // return false;
+    }
+
+    public List<User> distribute2() {
+        Date date = new Date();
+        usersStartMap = new HashMap<>();
+        alreadyPlannedTasks = new HashSet<>();
+
+
+        for (var user: users) {
+            usersStartMap.put(user.getLogin(), user.getAddress());
+        }
+        System.out.println(usersStartMap);
+
         for (User user: users) {
-            for (Task plannedTask: user.getPlannedTasks()) {
-                if (task.getId() == plannedTask.getId()) {
-                    return true;
+            curUser = user;
+            PriorityQueue<Task> heap = new PriorityQueue<>((a, b) -> compare(a, b));
+            heap.addAll(tasks);
+            System.out.println(user + " -- " + heap.size() + " " + (user.getLeftWorkingHours() > heap.peek().getHoursDuration()));
+            while (!heap.isEmpty()) {
+                var nextTask = heap.poll();
+                if (isTaskPlanned(nextTask) || 
+                    (user.getLeftWorkingHours() < nextTask.getHoursDuration() + mapsService.getRoadTime(user.getAddress(), nextTask.getAddress())) ||
+                    nextTask.getPriority().ordinal() > user.getGrade().ordinal()) {
+                    continue;
                 }
+                user.addTask(nextTask, mapsService.getRoadTime(user.getAddress(), nextTask.getAddress()));
+                alreadyPlannedTasks.add(nextTask);
             }
         }
-        return false;
+
+        for (User user: users) {
+            user.setAddress(usersStartMap.get(user.getLogin()));
+        }
+
+        System.out.println(alreadyPlannedTasks);
+        System.out.println(tasksCompletedByUsers);
+
+
+        for (var user: users) {
+            if (!user.getPlannedTasks().isEmpty()) {
+                var task = user.getPlannedTasks().peek();
+                task.setStatus(TaskStatus.IN_PROGRESS);
+                taskRepository.save(task);
+            }
+            user.setAddress(usersStartMap.get(user.getLogin()));
+        }
+        System.out.println("heap distrib time: " + (new Date().getTime() - date.getTime()));
+
+        return users;
+    }
+
+    public int compare(Task task1, Task task2) {
+        if (task1.getPriority().ordinal() > curUser.getGrade().ordinal()) {
+            return -1;
+        }
+        if (task1.getWorkersScore() < task2.getWorkersScore()) return 1;
+        else if (task1.getWorkersScore() == task2.getWorkersScore()) return 0;
+        return -1;
+    }
+
+    public void deleteUserByLogin(String login) {
+        System.out.println(users.size());
+        this.users = (ArrayList<User>) users.stream().filter(a -> !a.getLogin().equals(login)).collect(Collectors.toList());
+        System.out.println(users.size());
+    }
+
+    public void editUserByDto(EditWorkerDTO dto) {
+        for (User user: users) {
+            if (user.getLogin().equals(dto.getLogin())) {
+                // usersStartMap.put(dto.getLogin(), dto.getAddress());
+                user.setAddress(dto.getAddress());
+                user.setGrade(dto.getGrade());
+                user.setName(dto.getName());;
+            }
+        }
+    }
+
+    public Set<Task> getPlannedTask() {
+        return alreadyPlannedTasks;
     }
 }
+

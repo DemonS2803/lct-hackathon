@@ -28,11 +28,8 @@ public class MapsService {
     @PostConstruct
     public void initMapsService() {
         waysCache = new HashMap<>();
-        ArrayList<FromToDTO> dbCache = (ArrayList<FromToDTO>) cacheRepository.findAll();
-        for (var fromTo: dbCache) {
-            if (fromTo.getFromPoint() == null || fromTo.getToPoint() == null || "".equals(fromTo.getFromPoint()) || "".equals(fromTo.getToPoint())) continue;
-            waysCache.put(new Way(fromTo.getFromPoint(), fromTo.getToPoint()), fromTo.getMinutes() / 60);
-        }
+        getCacheFromDB();
+        System.out.println(waysCache);
 
         waysRequestSet = new HashSet<>();
     }
@@ -46,7 +43,6 @@ public class MapsService {
                     tasks.get(i).getAddress().equals(tasks.get(j).getAddress())) {
                     continue;
                 }
-
                 waysRequestSet.add(new FromToDTO(tasks.get(i).getAddress(), tasks.get(j).getAddress()));
             }
         }
@@ -59,6 +55,16 @@ public class MapsService {
                 }
                 waysRequestSet.add(new FromToDTO(tasks.get(i).getAddress(), workers.get(j).getAddress()));
             }
+        }
+    }
+
+    public void getCacheFromDB() {
+        ArrayList<FromToDTO> dbCache = (ArrayList<FromToDTO>) cacheRepository.findAll();
+        for (var fromTo: dbCache) {
+            if (fromTo.getFromPoint() == null || fromTo.getToPoint() == null 
+                || "".equals(fromTo.getFromPoint()) || "".equals(fromTo.getToPoint())
+                || "null".equals(fromTo.getFromPoint()) || "null".equals(fromTo.getToPoint())) continue;
+            waysCache.put(new Way(fromTo.getFromPoint(), fromTo.getToPoint()), fromTo.getMinutes() / 60);
         }
     }
 
@@ -82,9 +88,11 @@ public class MapsService {
         cacheRepository.saveAll(gotWays);
 
         waysRequestSet.clear();
+        getCacheFromDB();
     }
 
     public Double getRoadTime(String from, String to) {
+        // return 0.3d;
         if (from == null || to == null) {
             return Double.MAX_VALUE;
         }

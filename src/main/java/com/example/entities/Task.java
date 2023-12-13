@@ -47,6 +47,8 @@ public class Task {
     private double workersScore;
     @ManyToOne
     private User executor;
+    private LocalDateTime executed;
+    private String comment;
 
 
 

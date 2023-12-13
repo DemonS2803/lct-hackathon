@@ -81,7 +81,7 @@ public class User {
 
 
     public void addTask(Task task, double timeWithRoad) {
-        this.leftWorkingHours -= timeWithRoad;
+        this.leftWorkingHours -= timeWithRoad + task.getHoursDuration();
         this.plannedTasks.offer(task);
     }
 
@@ -98,11 +98,12 @@ public class User {
         localeX = task.getLocaleX();
         localeY = task.getLocaleY();
         task.setExecutor(this);
+        task.setExecuted(LocalDateTime.now());
     }
 
     @Override
     public String toString() {
-        return "Worker{ name=" + name + ", grade=" + grade + "}";
+        return "Worker{ name=" + name + ", grade=" + grade + " " + leftWorkingHours +  " address=" + address +  " }";
     }
 
 }
